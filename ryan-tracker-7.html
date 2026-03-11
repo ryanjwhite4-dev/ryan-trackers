@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>Ryan's Firefighter Program</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #07070e; color: #dde; font-family: 'Inter', system-ui, sans-serif; }
+    input, button, textarea { font-family: inherit; }
+    ::-webkit-scrollbar { width: 4px; } 
+    ::-webkit-scrollbar-track { background: #07070e; }
+    ::-webkit-scrollbar-thumb { background: #1a1a2e; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // ─── PROGRAM DATA ─────────────────────────────────────────────────────────
+    const PROGRAM = [
+      {
+        day: "Monday", tag: "push", color: "#f97316",
+        label: "Push — Chest / Shoulders / Triceps",
+        focus: "Chest mass, pressing strength, upper body aesthetics",
+        exercises: [
+          { name: "Barbell Bench Press", sets: 4, reps: "5", rest: "3 min", notes: "Primary chest builder. Retract scapula, drive feet. Add 5 lbs when all reps clean." },
+          { name: "Incline Barbell Press", sets: 3, reps: "8", rest: "2 min", notes: "Upper chest fullness — key for your bigger chest goal." },
+          { name: "Seated DB Shoulder Press", sets: 3, reps: "10", rest: "90 sec", notes: "Shoulder mass + overhead stability critical for firefighting." },
+          { name: "Cable / DB Lateral Raises", sets: 3, reps: "12–15", rest: "60 sec", notes: "Shoulder width. Go lighter, feel the muscle." },
+          { name: "Tricep Rope Pushdown", sets: 3, reps: "12", rest: "60 sec", notes: "Arm definition + lockout strength on all pressing." },
+          { name: "Hollow Body Hold", sets: 3, reps: "30 sec", rest: "45 sec", notes: "Deep core bracing — foundation for visible abs." },
+        ],
+        cardio: { duration: "20 min", hr: "130–145 bpm", notes: "Post-lift. Bike or treadmill incline walk. HDL builder — don't skip it." },
+      },
+      {
+        day: "Tuesday", tag: "pull", color: "#3b82f6",
+        label: "Pull — Back / Biceps / Rear Delts",
+        focus: "Back thickness, pulling strength, posture",
+        exercises: [
+          { name: "Barbell Deadlift", sets: 4, reps: "5", rest: "3 min", notes: "Most important lift for firefighter strength. Flat back, hard brace, controlled descent." },
+          { name: "Barbell Bent-Over Row", sets: 4, reps: "8", rest: "2 min", notes: "Back thickness and posture. Pull to lower chest." },
+          { name: "Pull-Ups / Lat Pulldown", sets: 3, reps: "8–10", rest: "90 sec", notes: "V-taper and pulling power. Work toward full unassisted pull-ups." },
+          { name: "Face Pulls", sets: 3, reps: "15", rest: "60 sec", notes: "Rear delt and rotator cuff health — shoulder injury prevention." },
+          { name: "Barbell / DB Curl", sets: 3, reps: "12", rest: "60 sec", notes: "Arm size and grip strength." },
+          { name: "Plank Shoulder Tap", sets: 3, reps: "10/side", rest: "45 sec", notes: "Anti-rotation core — crucial for dragging and carrying on calls." },
+        ],
+        cardio: { duration: "20 min", hr: "130–145 bpm", notes: "Post-lift. Rowing machine preferred — great for triglycerides." },
+      },
+      {
+        day: "Wednesday", tag: "conditioning", color: "#ef4444",
+        label: "Conditioning — Firefighter Performance Day",
+        focus: "Job-specific aerobic power, functional strength",
+        exercises: [
+          { name: "Sled Push (or Treadmill Incline)", sets: 5, reps: "40 yd / 2 min", rest: "90 sec", notes: "Simulates hose drag. Load heavy, breathe steady. Most job-specific exercise you can do." },
+          { name: "Farmer Carries", sets: 4, reps: "40–50 ft heavy", rest: "90 sec", notes: "Grip, core, loaded carry — this is literally your job. No floor markings? 13–15 steps out and back = one set." },
+          { name: "Box Step-Ups with Weight", sets: 3, reps: "10/leg", rest: "60 sec", notes: "Stair climbing simulation under load. Use a vest if available." },
+          { name: "Battle Ropes / KB Swings", sets: 4, reps: "30 sec", rest: "60 sec", notes: "Explosive cardiorespiratory power — mimics burst exertion on calls." },
+          { name: "Rowing Machine", sets: 1, reps: "15 min steady", rest: "N/A", notes: "Aerobic cooldown. HR 130–150 bpm. Critical for your lipid numbers." },
+          { name: "Dead Bugs", sets: 3, reps: "10/side", rest: "45 sec", notes: "Deep core activation, lower ab emphasis." },
+        ],
+        cardio: null,
+      },
+      {
+        day: "Thursday", tag: "lower", color: "#22c55e",
+        label: "Lower Body — Legs / Glutes / Core",
+        focus: "Leg strength, core stability, lower ab development",
+        exercises: [
+          { name: "Barbell Back Squat", sets: 4, reps: "5", rest: "3 min", notes: "King of lower body. Full depth, hard brace. Add 5 lbs when all reps are clean." },
+          { name: "Romanian Deadlift (RDL)", sets: 3, reps: "10", rest: "2 min", notes: "Hamstring strength + hip hinge reinforcement." },
+          { name: "Barbell Hip Thrust", sets: 3, reps: "12", rest: "90 sec", notes: "Glute power — explosive movement on calls and stairs." },
+          { name: "Walking Lunges", sets: 3, reps: "12/leg", rest: "90 sec", notes: "Unilateral balance + conditioning." },
+          { name: "Hanging Leg Raises", sets: 4, reps: "10–12", rest: "60 sec", notes: "Lower ab development — your primary aesthetic goal here." },
+          { name: "Ab Wheel Rollout", sets: 3, reps: "8–10", rest: "60 sec", notes: "Full core strength — the base for visible abs." },
+        ],
+        cardio: { duration: "20 min", hr: "130–145 bpm", notes: "Post-lift. Bike preferred (quads are tired). Crucial for your cholesterol protocol." },
+      },
+      {
+        day: "Friday", tag: "upper", color: "#a855f7",
+        label: "Upper Body — Strength + Volume",
+        focus: "Strength maintenance, hypertrophy volume, aesthetic work",
+        exercises: [
+          { name: "Overhead Press (OHP)", sets: 4, reps: "5", rest: "3 min", notes: "Overhead strength essential for job performance. Brace hard, no lower back arch." },
+          { name: "Weighted Pull-Ups", sets: 4, reps: "6", rest: "2 min", notes: "Add weight when 6 reps feel controlled and easy." },
+          { name: "DB Incline Flye", sets: 3, reps: "12", rest: "60 sec", notes: "Chest stretch and shape. Controlled eccentric." },
+          { name: "Cable Row", sets: 3, reps: "12", rest: "60 sec", notes: "Mid-back detail and posture work." },
+          { name: "Tricep Overhead Extension", sets: 3, reps: "12", rest: "60 sec", notes: "Long head tricep — arm size." },
+          { name: "Reverse Crunches", sets: 4, reps: "15", rest: "45 sec", notes: "Lower abs. Control the descent — that's where the work is." },
+        ],
+        cardio: { duration: "20 min", hr: "130–145 bpm", notes: "4th cardio session of the week — non-negotiable given your lipid panel." },
+      },
+      {
+        day: "Saturday", tag: "recovery", color: "#14b8a6",
+        label: "Active Recovery + Mobility",
+        focus: "Movement, mobility, injury prevention",
+        exercises: [
+          { name: "30 min Walk or Easy Bike", sets: 1, reps: "30 min", rest: "N/A", notes: "Stay moving. HR under 120 bpm. Even this counts for your HDL over time." },
+          { name: "Hip Flexor Stretch", sets: 2, reps: "60 sec/side", rest: "N/A", notes: "Critical for firefighters who sit between calls. Tight hip flexors = back pain." },
+          { name: "Thoracic Spine Rotation", sets: 2, reps: "10/side", rest: "N/A", notes: "Counteracts carrying heavy gear on your upper back." },
+          { name: "Foam Roll", sets: 1, reps: "5–8 min", rest: "N/A", notes: "Quads, IT band, glutes, upper back. Recovery and injury prevention." },
+        ],
+        cardio: null,
+      },
+      {
+        day: "Sunday", tag: "rest", color: "#6b7280",
+        label: "Full Rest",
+        focus: "Sleep, nutrition, recovery",
+        exercises: [],
+        cardio: null,
+      },
+    ];
+
+    const LABS = [
+      { name: "Total Cholesterol", value: 281, ref: "<200", unit: "mg/dL", status: "high", note: "Significantly elevated. Diet + exercise are first-line interventions." },
+      { name: "LDL Cholesterol", value: 197, ref: "<100", unit: "mg/dL", status: "high", note: "≥190 may indicate familial hypercholesterolemia. Discuss with your doctor." },
+      { name: "HDL Cholesterol", value: 46, ref: "≥40", unit: "mg/dL", status: "borderline", note: "Just above minimum. Aerobic exercise is the #1 way to raise HDL." },
+      { name: "Triglycerides", value: 199, ref: "<150", unit: "mg/dL", status: "high", note: "Elevated. Cut refined carbs/sugar and increase cardio frequency." },
+      { name: "Testosterone", value: 530, ref: "300–1000", unit: "ng/dL", status: "normal", note: "Solid mid-range. Supports good strength adaptation and recovery." },
+      { name: "Hematocrit", value: 51.9, ref: "39.4–51.1", unit: "%", status: "borderline", note: "Slightly high — common on T. Stay well hydrated. Monitor with prescriber." },
+      { name: "Hemoglobin A1c", value: 5.6, ref: "<5.7", unit: "%", status: "normal", note: "Excellent. No diabetes risk." },
+      { name: "Glucose", value: 94, ref: "65–139", unit: "mg/dL", status: "normal", note: "Perfect." },
+      { name: "TSH", value: 1.05, ref: "0.40–4.50", unit: "mIU/L", status: "normal", note: "Thyroid function normal." },
+    ];
+
+    // ─── STORAGE ──────────────────────────────────────────────────────────────
+    const STORAGE_KEY = "ryan-workout-data";
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return { sessions: {}, checkIns: {} };
+    }
+
+    function saveData(data) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) { console.error("Save failed", e); }
+    }
+
+    // ─── APP ──────────────────────────────────────────────────────────────────
+    function App() {
+      const [tab, setTab] = useState("plan");
+      const [open, setOpen] = useState(null);
+      const [logDay, setLogDay] = useState(null);
+      const [wts, setWts] = useState({});
+      const [rps, setRps] = useState({});
+      const [sessions, setSessions] = useState({});
+      const [checkIns, setCheckIns] = useState({});
+      const [mood, setMood] = useState(3);
+      const [energy, setEnergy] = useState(3);
+      const [soreness, setSoreness] = useState(3);
+      const [sleepHrs, setSleepHrs] = useState(7);
+      const [noteText, setNoteText] = useState("");
+      const [toast, setToast] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [confirmClear, setConfirmClear] = useState(false);
+
+      useEffect(() => {
+        const data = loadData();
+        setSessions(data.sessions || {});
+        setCheckIns(data.checkIns || {});
+        setLoading(false);
+      }, []);
+
+      useEffect(() => {
+        if (!loading) saveData({ sessions, checkIns });
+      }, [sessions, checkIns, loading]);
+
+      const today = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
+      const dateKey = () => new Date().toISOString().split("T")[0];
+      const sessionKey = (d) => `${dateKey()}-${d.day}`;
+      const done = (d) => !!sessions[sessionKey(d)];
+
+      const flash = (msg) => { setToast(msg); setTimeout(() => setToast(null), 2500); };
+
+      const saveWorkout = () => {
+        if (!logDay || logDay.exercises.length === 0) return;
+        const newSessions = { ...sessions, [sessionKey(logDay)]: { wts: { ...wts }, rps: { ...rps }, date: dateKey(), dayName: logDay.day } };
+        setSessions(newSessions);
+        setWts({}); setRps({});
+        flash("✅ Workout saved!");
+      };
+
+      const saveCI = () => {
+        if (!logDay) return;
+        const newCI = { ...checkIns, [sessionKey(logDay)]: { mood, energy, soreness, sleep: sleepHrs, note: noteText, date: dateKey(), dayName: logDay.day } };
+        setCheckIns(newCI);
+        setNoteText("");
+        flash("💬 Check-in saved!");
+      };
+
+      const clearAllData = () => {
+        setSessions({});
+        setCheckIns({});
+        setConfirmClear(false);
+        flash("🗑️ All data cleared.");
+      };
+
+      const totalSessions = Object.keys(sessions).length;
+      const allCheckIns = Object.values(checkIns);
+      const avgEnergy = allCheckIns.length ? (allCheckIns.reduce((a, c) => a + c.energy, 0) / allCheckIns.length).toFixed(1) : "—";
+      const avgSleep = allCheckIns.length ? (allCheckIns.reduce((a, c) => a + c.sleep, 0) / allCheckIns.length).toFixed(1) : "—";
+      const thisWeekStart = (() => { const d = new Date(); d.setDate(d.getDate() - d.getDay() + 1); return d.toISOString().split("T")[0]; })();
+      const weekSessions = Object.values(sessions).filter(s => s.date >= thisWeekStart).length;
+      const weekTarget = PROGRAM.filter(d => d.tag !== "rest").length;
+
+      const lastWeight = (exName) => {
+        const all = Object.values(sessions).sort((a, b) => b.date.localeCompare(a.date));
+        for (const s of all) {
+          if (s.dayName === logDay?.day) {
+            const idx = logDay.exercises.findIndex(e => e.name === exName);
+            if (s.wts && s.wts[idx]) return s.wts[idx];
+          }
+        }
+        return null;
+      };
+
+      const S = {
+        app: { fontFamily: "'Inter',system-ui,sans-serif", background: "#07070e", minHeight: "100vh", color: "#dde", maxWidth: 680, margin: "0 auto" },
+        hdr: { background: "linear-gradient(155deg,#0b1222,#13203a)", padding: "18px 16px 14px", borderBottom: "1px solid #192540" },
+        tabs: { display: "flex", background: "#0b0b16", borderBottom: "1px solid #181828", position: "sticky", top: 0, zIndex: 10 },
+        tb: (a) => ({ flex: 1, padding: "10px 2px", border: "none", background: "transparent", color: a ? "#5a9ee0" : "#404060", fontSize: 11, fontWeight: 700, cursor: "pointer", borderBottom: a ? "2px solid #4880d8" : "2px solid transparent" }),
+        body: { padding: "13px 13px 80px" },
+        card: (border) => ({ background: "#0f0f18", border: `1px solid ${border || "#1a1a2e"}`, borderRadius: 11, marginBottom: 9, overflow: "hidden" }),
+        chd: { padding: "11px 13px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" },
+        tag: (c) => ({ background: c + "20", border: `1px solid ${c}44`, borderRadius: 5, padding: "2px 7px", fontSize: 9, fontWeight: 800, color: c, textTransform: "uppercase", letterSpacing: "0.5px" }),
+        tbl: { width: "100%", borderCollapse: "collapse", fontSize: 12 },
+        th: { color: "#3a4060", fontWeight: 700, textAlign: "left", padding: "3px 5px 8px" },
+        td: { padding: "7px 5px", borderTop: "1px solid #14141e", verticalAlign: "top" },
+        inp: (highlight) => ({ width: 52, padding: "5px 6px", background: highlight ? "#1a1a08" : "#14141e", border: `1px solid ${highlight ? "#505020" : "#252540"}`, borderRadius: 5, color: "#dde", fontSize: 11 }),
+        btn: (c) => ({ width: "100%", padding: "11px 0", borderRadius: 8, border: "none", background: c, color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer" }),
+        ta: { width: "100%", minHeight: 65, padding: 9, background: "#14141e", border: "1px solid #252540", borderRadius: 7, color: "#dde", fontSize: 12, resize: "vertical", boxSizing: "border-box", marginBottom: 10 },
+        stat: { background: "#0f0f18", border: "1px solid #1a1a2e", borderRadius: 11, padding: 13, textAlign: "center" },
+        ratingBtn: (active, c) => ({ width: 34, height: 34, borderRadius: 7, border: `1px solid ${active ? c : "#252540"}`, background: active ? c + "22" : "#14141e", color: active ? c : "#404060", fontWeight: 700, fontSize: 12, cursor: "pointer" }),
+      };
+
+      if (loading) return (
+        <div style={{ ...S.app, display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+          <div style={{ textAlign: "center", color: "#4a5070" }}>
+            <div style={{ fontSize: 28, marginBottom: 12 }}>🔥</div>
+            <div style={{ fontSize: 13 }}>Loading your data...</div>
+          </div>
+        </div>
+      );
+
+      return (
+        <div style={S.app}>
+          {toast && (
+            <div style={{ position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)", background: "#1a3a20", border: "1px solid #2a6030", borderRadius: 10, padding: "10px 22px", fontSize: 13, fontWeight: 700, color: "#6dcc50", zIndex: 999, whiteSpace: "nowrap", boxShadow: "0 4px 20px #00000080" }}>
+              {toast}
+            </div>
+          )}
+
+          <div style={S.hdr}>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              <span style={{ fontSize: 26 }}>🔥</span>
+              <div>
+                <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: "-0.5px" }}>Ryan's Firefighter Program</div>
+                <div style={{ marginTop: 3, fontSize: 11, color: "#4a6080" }}>5'6" · 177 lbs · 35yo · Career FF · T: 530 ng/dL</div>
+              </div>
+              <div style={{ marginLeft: "auto", textAlign: "right" }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: weekSessions >= weekTarget ? "#4caa38" : "#5b9de0" }}>{weekSessions}/{weekTarget}</div>
+                <div style={{ fontSize: 9, color: "#3a4060" }}>this week</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginTop: 9 }}>
+              {["Strength","Job Performance","Conditioning","Lean Abs","Bigger Chest","Heart Health"].map(g =>
+                <span key={g} style={{ background: "#0d1a2e", border: "1px solid #1a2e48", borderRadius: 20, padding: "2px 9px", fontSize: 10, color: "#5080aa" }}>{g}</span>)}
+            </div>
+            <div style={{ background: "#110808", border: "1px solid #aa303033", borderRadius: 8, padding: "8px 12px", marginTop: 10, fontSize: 11, color: "#aa6060" }}>
+              ⚠️ <strong style={{ color: "#dd5050" }}>Labs flagged:</strong> LDL 197 · Cholesterol 281 · Triglycerides 199. Follow up with your doctor. Program includes mandatory post-lift cardio to address this.
+            </div>
+          </div>
+
+          <div style={S.tabs}>
+            {[["plan","📋 Plan"],["log","✍️ Log"],["progress","📈 Progress"],["labs","🩸 Labs"],["guide","📘 Guide"]].map(([id, lbl]) => (
+              <button key={id} style={S.tb(tab === id)} onClick={() => setTab(id)}>{lbl}</button>
+            ))}
+          </div>
+
+          <div style={S.body}>
+
+            {/* ══ PLAN ══ */}
+            {tab === "plan" && (
+              <>
+                <p style={{ margin: "0 0 12px", fontSize: 12, color: "#3a4060" }}>
+                  5-day split + mandatory 20-min post-lift cardio every lifting day. Tap a day to expand.
+                </p>
+                {PROGRAM.map(d => (
+                  <div key={d.day} style={S.card(open === d.day ? d.color + "55" : null)}>
+                    <div style={S.chd} onClick={() => setOpen(open === d.day ? null : d.day)}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                        <span style={S.tag(d.color)}>{d.tag}</span>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", gap: 6 }}>
+                            {d.day}
+                            {d.day === today && <span style={{ background: "#182210", color: "#5caa28", fontSize: 9, padding: "1px 6px", borderRadius: 9, fontWeight: 800 }}>TODAY</span>}
+                            {done(d) && <span style={{ color: "#4caa38", fontSize: 12 }}>✓</span>}
+                          </div>
+                          <div style={{ fontSize: 10, color: "#3a4060", marginTop: 1 }}>{d.label}</div>
+                        </div>
+                      </div>
+                      <span style={{ color: d.color, fontSize: 13 }}>{open === d.day ? "▲" : "▼"}</span>
+                    </div>
+
+                    {open === d.day && (
+                      <div style={{ borderTop: "1px solid #13131e", padding: 13 }}>
+                        {d.exercises.length === 0 ? (
+                          <p style={{ margin: 0, color: "#3a4060", fontSize: 12 }}>Rest day. Sleep, eat well, recover. Growth happens here.</p>
+                        ) : (
+                          <>
+                            <p style={{ margin: "0 0 10px", fontSize: 10, color: "#3a4060", fontStyle: "italic" }}>{d.focus}</p>
+                            <table style={S.tbl}>
+                              <thead>
+                                <tr>
+                                  <th style={S.th}>Exercise</th>
+                                  <th style={S.th}>Sets</th>
+                                  <th style={S.th}>Reps</th>
+                                  <th style={S.th}>Rest</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {d.exercises.map((ex, i) => (
+                                  <tr key={i}>
+                                    <td style={S.td}>
+                                      <div style={{ fontWeight: 600, color: "#ccd" }}>{ex.name}</div>
+                                      <div style={{ fontSize: 10, color: "#3a4060", marginTop: 2 }}>{ex.notes}</div>
+                                    </td>
+                                    <td style={{ ...S.td, textAlign: "center", color: "#aac" }}>{ex.sets}</td>
+                                    <td style={{ ...S.td, textAlign: "center", color: "#aac" }}>{ex.reps}</td>
+                                    <td style={{ ...S.td, textAlign: "center", color: "#3a4060", fontSize: 10 }}>{ex.rest}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {d.cardio && (
+                              <div style={{ marginTop: 11, background: "#0c1a0e", border: "1px solid #1a3a20", borderRadius: 8, padding: "9px 12px" }}>
+                                <div style={{ fontSize: 10, fontWeight: 800, color: "#4caa38", marginBottom: 3 }}>🫀 POST-LIFT CARDIO — {d.cardio.duration} @ {d.cardio.hr}</div>
+                                <div style={{ fontSize: 11, color: "#4a7050" }}>{d.cardio.notes}</div>
+                              </div>
+                            )}
+                            <button onClick={e => { e.stopPropagation(); setLogDay(d); setTab("log"); }}
+                              style={{ marginTop: 11, padding: "8px 15px", background: d.color + "18", border: `1px solid ${d.color}44`, borderRadius: 7, color: d.color, fontWeight: 700, fontSize: 11, cursor: "pointer" }}>
+                              Log This Workout →
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
+
+            {/* ══ LOG ══ */}
+            {tab === "log" && (
+              <>
+                <p style={{ margin: "0 0 12px", fontSize: 12, color: "#3a4060" }}>Select a day, log weights & reps, and complete your daily check-in.</p>
+                <div style={{ display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 }}>
+                  {PROGRAM.map(d => (
+                    <button key={d.day} onClick={() => setLogDay(d)}
+                      style={{ padding: "5px 10px", borderRadius: 7, border: `1px solid ${logDay?.day === d.day ? d.color : "#252540"}`, background: logDay?.day === d.day ? d.color + "18" : "#0f0f18", color: logDay?.day === d.day ? d.color : "#4a4a70", fontSize: 10, fontWeight: 700, cursor: "pointer" }}>
+                      {d.day === today ? "🔥" : ""}{d.day.slice(0, 3)}
+                    </button>
+                  ))}
+                </div>
+
+                {!logDay && (
+                  <div style={{ ...S.card(), padding: 18, textAlign: "center", color: "#3a4060", fontSize: 12 }}>
+                    Select a day above to start logging.
+                  </div>
+                )}
+
+                {logDay && logDay.exercises.length === 0 && (
+                  <div style={{ ...S.card(), padding: 20, textAlign: "center" }}>
+                    <div style={{ fontSize: 28, marginBottom: 6 }}>😴</div>
+                    <div style={{ fontWeight: 700, marginBottom: 4 }}>Rest Day</div>
+                    <div style={{ fontSize: 12, color: "#3a4060" }}>Sleep, eat, hydrate (especially on T — hematocrit management). Growth happens here.</div>
+                  </div>
+                )}
+
+                {logDay && logDay.exercises.length > 0 && (
+                  <>
+                    <div style={{ ...S.card(), marginBottom: 11 }}>
+                      <div style={{ padding: "10px 13px 4px", borderBottom: "1px solid #13131e", display: "flex", alignItems: "center", gap: 9 }}>
+                        <span style={S.tag(logDay.color)}>{logDay.tag}</span>
+                        <span style={{ fontWeight: 700, fontSize: 12 }}>{logDay.day} — {logDay.label}</span>
+                        {done(logDay) && <span style={{ marginLeft: "auto", fontSize: 10, color: "#4caa38", fontWeight: 700 }}>✓ Logged today</span>}
+                      </div>
+                      <div style={{ padding: 13 }}>
+                        <div style={{ fontSize: 10, color: "#3a4060", marginBottom: 10 }}>Enter weight and reps. Previous values shown in gold when available.</div>
+                        {logDay.exercises.map((ex, i) => {
+                          const prev = lastWeight(ex.name);
+                          return (
+                            <div key={i} style={{ marginBottom: 10 }}>
+                              <div style={{ fontSize: 11, fontWeight: 700, color: "#bbd", marginBottom: 5 }}>{ex.name}</div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
+                                <input type="number" placeholder={prev ? `prev: ${prev}` : "lbs"} style={S.inp(!!prev)}
+                                  value={wts[i] || ""} onChange={e => setWts(p => ({ ...p, [i]: e.target.value }))} />
+                                <span style={{ fontSize: 10, color: "#3a4060" }}>lbs</span>
+                                <input type="text" placeholder={ex.reps} style={S.inp(false)}
+                                  value={rps[i] || ""} onChange={e => setRps(p => ({ ...p, [i]: e.target.value }))} />
+                                <span style={{ fontSize: 10, color: "#3a4060" }}>reps</span>
+                                {prev && <span style={{ fontSize: 9, color: "#806020", fontStyle: "italic" }}>last: {prev} lbs</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {logDay.cardio && (
+                          <div style={{ marginTop: 8, background: "#0c1a0e", border: "1px solid #1a3a20", borderRadius: 7, padding: "9px 11px" }}>
+                            <div style={{ fontSize: 10, fontWeight: 800, color: "#4caa38" }}>🫀 Post-Lift Cardio: {logDay.cardio.duration} @ {logDay.cardio.hr}</div>
+                            <div style={{ fontSize: 10, color: "#3a5030", marginTop: 2 }}>Note cardio completion in your check-in below.</div>
+                          </div>
+                        )}
+                        <button style={{ ...S.btn("linear-gradient(135deg,#1e55c0,#0f3880)"), marginTop: 13 }} onClick={saveWorkout}>
+                          ✅ Save Workout
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ ...S.card(), padding: 13 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 13, color: "#bbd" }}>Daily Check-In</div>
+                      {[
+                        { label: "Mood", val: mood, set: setMood, color: "#5b9de0" },
+                        { label: "Energy", val: energy, set: setEnergy, color: "#f97316" },
+                        { label: "Soreness", val: soreness, set: setSoreness, color: "#a855f7" },
+                      ].map(({ label, val, set, color }) => (
+                        <div key={label} style={{ marginBottom: 12 }}>
+                          <div style={{ fontSize: 10, color: "#3a4060", marginBottom: 6 }}>{label} (1–5)</div>
+                          <div style={{ display: "flex", gap: 7 }}>
+                            {[1,2,3,4,5].map(n => (
+                              <button key={n} style={S.ratingBtn(val === n, color)} onClick={() => set(n)}>{n}</button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      <div style={{ marginBottom: 12 }}>
+                        <div style={{ fontSize: 10, color: "#3a4060", marginBottom: 6 }}>Sleep last night (hours)</div>
+                        <div style={{ display: "flex", gap: 5 }}>
+                          {[4,5,6,7,8,9,10].map(n => (
+                            <button key={n} style={S.ratingBtn(sleepHrs === n, "#22c55e")} onClick={() => setSleepHrs(n)}>{n}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 10, color: "#3a4060", marginBottom: 6 }}>Notes (PRs, cardio done, how shift went, diet, anything)</div>
+                      <textarea style={S.ta} value={noteText} onChange={e => setNoteText(e.target.value)}
+                        placeholder="e.g. Bench 185×5 — clean. Cardio done 22 min bike. Busy shift. 7 hrs sleep. Shoulder felt good..." />
+                      <button style={S.btn("linear-gradient(135deg,#1a5530,#0f3820)")} onClick={saveCI}>
+                        💬 Save Check-In
+                      </button>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* ══ PROGRESS ══ */}
+            {tab === "progress" && (
+              <>
+                <p style={{ margin: "0 0 14px", fontSize: 12, color: "#3a4060" }}>Your training history and trends. All data persists across sessions.</p>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 14 }}>
+                  <div style={S.stat}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "#5b9de0" }}>{totalSessions}</div>
+                    <div style={{ fontSize: 9, color: "#3a4060", marginTop: 3 }}>Total Sessions</div>
+                  </div>
+                  <div style={S.stat}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: weekSessions >= weekTarget ? "#4caa38" : "#f97316" }}>{weekSessions}/{weekTarget}</div>
+                    <div style={{ fontSize: 9, color: "#3a4060", marginTop: 3 }}>This Week</div>
+                  </div>
+                  <div style={S.stat}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "#f97316" }}>{avgEnergy}</div>
+                    <div style={{ fontSize: 9, color: "#3a4060", marginTop: 3 }}>Avg Energy</div>
+                  </div>
+                  <div style={S.stat}>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: "#22c55e" }}>{avgSleep}h</div>
+                    <div style={{ fontSize: 9, color: "#3a4060", marginTop: 3 }}>Avg Sleep</div>
+                  </div>
+                </div>
+
+                <div style={{ ...S.card(), padding: 13, marginBottom: 11 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 11, color: "#bbd" }}>This Week</div>
+                  {PROGRAM.map(d => (
+                    <div key={d.day} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #12121e" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: "50%", background: done(d) ? "#4caa38" : "#252540", display: "inline-block" }} />
+                        <span style={{ fontSize: 12, fontWeight: d.day === today ? 700 : 400, color: d.day === today ? "#ccd" : "#4a5070" }}>
+                          {d.day}{d.day === today ? " 🔥" : ""}
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", gap: 7, alignItems: "center" }}>
+                        <span style={S.tag(d.color)}>{d.tag}</span>
+                        {done(d) ? <span style={{ color: "#4caa38", fontSize: 11 }}>✓</span> : d.cardio ? <span style={{ fontSize: 9, color: "#cc5020" }}>+cardio</span> : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {totalSessions > 0 && (
+                  <div style={{ ...S.card(), padding: 13, marginBottom: 11 }}>
+                    <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 11, color: "#bbd" }}>Recent Sessions</div>
+                    {Object.entries(sessions).sort((a,b) => b[1].date.localeCompare(a[1].date)).slice(0, 8).map(([k, s]) => (
+                      <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #12121e", fontSize: 11 }}>
+                        <span style={{ color: "#9090cc", fontWeight: 600 }}>{s.dayName}</span>
+                        <span style={{ color: "#3a4060" }}>{s.date}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {allCheckIns.length > 0 && (
+                  <div style={{ ...S.card(), padding: 13, marginBottom: 11 }}>
+                    <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 11, color: "#bbd" }}>Recent Check-Ins</div>
+                    {Object.entries(checkIns).sort((a,b) => b[1].date.localeCompare(a[1].date)).slice(0, 6).map(([k, c]) => (
+                      <div key={k} style={{ padding: "9px 0", borderBottom: "1px solid #12121e" }}>
+                        <div style={{ display: "flex", gap: 10, marginBottom: 4, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 10, color: "#3a4060" }}>{c.date} {c.dayName}</span>
+                          <span style={{ fontSize: 10, color: "#5b9de0" }}>Mood {c.mood}/5</span>
+                          <span style={{ fontSize: 10, color: "#f97316" }}>Energy {c.energy}/5</span>
+                          <span style={{ fontSize: 10, color: "#a855f7" }}>Soreness {c.soreness}/5</span>
+                          <span style={{ fontSize: 10, color: "#22c55e" }}>Sleep {c.sleep}h</span>
+                        </div>
+                        {c.note && <p style={{ margin: 0, fontSize: 11, color: "#6070a0" }}>{c.note}</p>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {totalSessions === 0 && allCheckIns.length === 0 && (
+                  <div style={{ ...S.card(), padding: 20, textAlign: "center", color: "#3a4060", fontSize: 12 }}>
+                    No data yet. Log your first workout to start tracking.
+                  </div>
+                )}
+
+                <div style={{ ...S.card(), padding: 13 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 8, color: "#bbd" }}>Data</div>
+                  <div style={{ fontSize: 11, color: "#3a4060", marginBottom: 11 }}>
+                    {totalSessions} sessions and {allCheckIns.length} check-ins saved. Data persists across sessions automatically.
+                  </div>
+                  {!confirmClear ? (
+                    <button onClick={() => setConfirmClear(true)}
+                      style={{ padding: "8px 14px", background: "#1a0808", border: "1px solid #442020", borderRadius: 7, color: "#884444", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>
+                      🗑️ Clear All Data
+                    </button>
+                  ) : (
+                    <div>
+                      <div style={{ fontSize: 11, color: "#cc5050", marginBottom: 9 }}>Are you sure? This cannot be undone.</div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={clearAllData} style={{ padding: "8px 14px", background: "#3a0808", border: "1px solid #882020", borderRadius: 7, color: "#ee5050", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Yes, clear everything</button>
+                        <button onClick={() => setConfirmClear(false)} style={{ padding: "8px 14px", background: "#14141e", border: "1px solid #252540", borderRadius: 7, color: "#8888aa", fontSize: 11, fontWeight: 700, cursor: "pointer" }}>Cancel</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* ══ LABS ══ */}
+            {tab === "labs" && (
+              <>
+                <div style={{ background: "#110808", border: "1px solid #aa303044", borderRadius: 10, padding: "11px 14px", marginBottom: 14 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: "#ee6060", marginBottom: 5 }}>⚠️ Medical Follow-Up Required</div>
+                  <p style={{ margin: 0, fontSize: 11, color: "#aa7070", lineHeight: 1.6 }}>
+                    LDL of 197 meets the threshold for familial hypercholesterolemia evaluation. Hematocrit slightly elevated (common on T). Please discuss with your physician and T prescriber. This is not medical advice.
+                  </p>
+                </div>
+                <div style={{ ...S.card(), padding: 0 }}>
+                  <div style={{ padding: "10px 13px 7px", borderBottom: "1px solid #13131e" }}>
+                    <span style={{ fontWeight: 700, fontSize: 12, color: "#bbd" }}>Quest Diagnostics — 02/16/2026</span>
+                  </div>
+                  {LABS.map((l, i) => (
+                    <div key={i} style={{ padding: "9px 13px", borderBottom: "1px solid #12121e", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: l.status === "high" ? "#ee6060" : l.status === "borderline" ? "#f0a030" : "#6dcc50" }}>{l.name}</div>
+                        <div style={{ fontSize: 10, color: "#3a4060", marginTop: 2 }}>{l.note}</div>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: l.status === "high" ? "#ee6060" : l.status === "borderline" ? "#f0a030" : "#6dcc50" }}>{l.value}{l.unit}</div>
+                        <div style={{ fontSize: 9, color: "#3a4060" }}>ref: {l.ref}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ ...S.card(), padding: 13, marginTop: 11 }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, marginBottom: 11, color: "#bbd" }}>🧠 How This Program Addresses Your Labs</div>
+                  {[
+                    { label: "↓ LDL / Cholesterol", action: "4x/week post-lift cardio + soluble fiber + reduced saturated fat. Expect 10–15% reduction over 12 weeks." },
+                    { label: "↓ Triglycerides", action: "Cardio is the most powerful TG-lowering intervention. Cut alcohol and refined carbs. Can drop 30–40% with consistency." },
+                    { label: "↑ HDL", action: "Aerobic exercise is the #1 evidence-based HDL raiser. 20 min 4x/week should move you from 46 toward 55+ in 12 weeks." },
+                    { label: "Hematocrit", action: "Stay heavily hydrated on shift (3–4L/day). Discuss T dose timing with prescriber. Cardio helps blood viscosity." },
+                  ].map((item, i) => (
+                    <div key={i} style={{ padding: "8px 0", borderBottom: "1px solid #12121e" }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#9090d0", marginBottom: 3 }}>{item.label}</div>
+                      <div style={{ fontSize: 11, color: "#5a5a90", lineHeight: 1.55 }}>{item.action}</div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* ══ GUIDE ══ */}
+            {tab === "guide" && (
+              <>
+                {[
+                  { title: "🎯 Your Starting Point", color: "#5b9de0", body: "Solid natural frame with good shoulder width and visible arm development. Body fat is concentrated in the lower abdomen and flanks — classic T-therapy redistribution pattern. Predictable and reversible. Your legs are lean. Estimated 22–25% body fat. With consistent training and right nutrition you're 4–5 months from a dramatically different midsection and 8–10 months from a genuinely impressive physique." },
+                  { title: "🍽️ Nutrition (Lab-Informed)", color: "#22c55e", body: "Given your lipid panel, dietary changes are as important as training. Cut saturated fat — red meat max 2x/week, avoid butter, fried food, full-fat dairy. Add oatmeal daily — soluble fiber binds LDL. Fatty fish or fish oil 3x/week — omega-3s directly lower triglycerides. Cut or eliminate alcohol — major triglyceride driver. Hit 160–180g protein daily. Target ~2,600 calories on training days, ~2,100 on rest days." },
+                  { title: "📈 Progressive Overload", color: "#f97316", body: "For 5-rep main lifts (squat, deadlift, bench, OHP): add 5 lbs when you complete all sets and reps cleanly. For 8–12 rep accessories: increase weight when the top of the rep range feels controlled and easy. Track every session in the Log tab — the log is the program. The previous weight shows automatically as a gold hint each time you log." },
+                  { title: "🫀 Cardio Is Non-Negotiable", color: "#ef4444", body: "LDL 197 + triglycerides 199 together represent real cardiovascular risk. 20 minutes of moderate cardio (HR 130–145 bpm) post-lift, 4 days a week. Rowing machine is ideal — full body, low impact, excellent lipid profile response. Bike is second best. Over 12 consistent weeks this protocol is projected to raise HDL from 46 toward 55+ and drop triglycerides 30–40%." },
+                  { title: "💊 Testosterone (530 ng/dL)", color: "#a855f7", body: "530 is solidly mid-range — a healthy, functional anabolic environment. You'll respond well to progressive overload and can expect noticeable strength gains within 4–6 weeks and visible muscle changes within 8–12 weeks with nutrition dialed in. Slightly elevated hematocrit (51.9%) means hydration is critical especially on 24-hour shifts. Drink 3–4L daily. Mention the lipid panel to your T prescriber — T therapy can contribute to LDL elevation." },
+                ].map((n, i) => (
+                  <div key={i} style={{ background: "#0f0f18", border: `1px solid ${n.color}28`, borderRadius: 11, padding: 14, marginBottom: 11 }}>
+                    <h3 style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700, color: n.color }}>{n.title}</h3>
+                    <p style={{ margin: 0, fontSize: 12, color: "#8888b0", lineHeight: 1.65 }}>{n.body}</p>
+                  </div>
+                ))}
+                <div style={{ background: "#100e07", border: "1px solid #40380e", borderRadius: 11, padding: 14 }}>
+                  <h3 style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 700, color: "#c8a030" }}>⚠️ Disclaimer</h3>
+                  <p style={{ margin: 0, fontSize: 12, color: "#706840", lineHeight: 1.65 }}>
+                    General fitness guide, not medical advice. Your lipid panel requires physician follow-up. As a career firefighter your cardiovascular health is a personal and occupational safety concern. Please discuss your labs with your doctor and T prescriber.
+                  </p>
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
